@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimum Spanning Tree - Prim & Kruskal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <h1 class="splash-title">kreggscode</h1>
+            <div class="splash-subtitle">MST Algorithm Visualizer</div>
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">Minimum Spanning Tree</h1>
+            <p class="subtitle">Comparing MST Algorithms</p>
+        </header>
+
+        <!-- Control Panel -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="algorithm">Algorithm:</label>
+                <select id="algorithm" class="select-input">
+                    <optgroup label="Core Algorithms">
+                        <option value="prim">Prim's Algorithm</option>
+                        <option value="jarnik">Jarník's Algorithm</option>
+                        <option value="prim-dijkstra">Prim-Dijkstra (DJP)</option>
+                        <option value="kruskal">Kruskal's Algorithm</option>
+                        <option value="boruvka">Borůvka's Algorithm</option>
+                        <option value="reverse-delete">Reverse-Delete Algorithm</option>
+                    </optgroup>
+                    <optgroup label="Optimized Algorithms">
+                        <option value="fredman-tarjan">Fredman-Tarjan Algorithm</option>
+                        <option value="cheriton-tarjan">Cheriton-Tarjan Algorithm</option>
+                        <option value="gabow-galil-spencer-tarjan">Gabow-Galil-Spencer-Tarjan</option>
+                        <option value="chazelle">Chazelle's Algorithm</option>
+                        <option value="pettie-ramachandran">Pettie-Ramachandran</option>
+                        <option value="kkt">KKT Randomized Algorithm</option>
+                        <option value="tarjan-verification">Tarjan's Verification</option>
+                        <option value="yao">Yao's Algorithm</option>
+                    </optgroup>
+                    <optgroup label="Specialized Algorithms">
+                        <option value="parallel-boruvka">Parallel Borůvka's</option>
+                        <option value="integer-weight">Integer-Weight MST</option>
+                        <option value="planar-graph">Planar Graph MST</option>
+                    </optgroup>
+                    <option value="both">Compare Both (Prim vs Kruskal)</option>
+                </select>
+            </div>
+
+            <div class="control-group color-picker-group" style="display: none;" id="color-picker-container">
+                <label for="color-picker">Color:</label>
+                <input type="color" id="color-picker" class="color-input" value="#00ff88">
+            </div>
+
+            <div class="control-group">
+                <label for="grid-size">Grid Size:</label>
+                <input type="range" id="grid-size" min="10" max="40" value="20" class="slider">
+                <span id="size-value">20</span>
+            </div>
+
+            <div class="control-group">
+                <label for="speed">Speed:</label>
+                <input type="range" id="speed" min="1" max="100" value="95" class="slider">
+                <span id="speed-value">95</span>
+            </div>
+
+            <button id="generate" class="btn btn-secondary">Generate New Maze</button>
+            <button id="start" class="btn btn-primary">Start Animation</button>
+            <button id="pause" class="btn btn-secondary" disabled>Pause</button>
+            <button id="stop" class="btn btn-danger" disabled>Stop</button>
+        </div>
+
+        <!-- Algorithm Comparison Container -->
+        <div id="comparison-container" class="comparison-container" style="display: none;">
+            <!-- Prim's Algorithm -->
+            <div class="algorithm-section">
+                <div class="algorithm-header">
+                    <h2 class="algorithm-title prim-title">Prim's Algorithm</h2>
+                    <p class="algorithm-subtitle">Grows from a start node</p>
+                </div>
+                <div class="visualization-container prim-container">
+                    <canvas id="prim-canvas" class="maze-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Kruskal's Algorithm -->
+            <div class="algorithm-section">
+                <div class="algorithm-header">
+                    <h2 class="algorithm-title kruskal-title">Kruskal's Algorithm</h2>
+                    <p class="algorithm-subtitle">Sorts edges globally</p>
+                </div>
+                <div class="visualization-container kruskal-container">
+                    <canvas id="kruskal-canvas" class="maze-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Single Algorithm Container -->
+        <div id="single-container" class="single-container">
+            <div class="algorithm-header">
+                <h2 id="algorithm-name" class="algorithm-title">Prim's Algorithm</h2>
+                <p id="algorithm-description" class="algorithm-subtitle">Grows from a start node</p>
+            </div>
+            <div class="visualization-container">
+                <canvas id="single-canvas" class="maze-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Edges Added:</span>
+                <span id="edges-added" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Time:</span>
+                <span id="time" class="stat-value">0.00s</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Weight:</span>
+                <span id="total-weight" class="stat-value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound toggle -->
+    <button id="sound-toggle" class="sound-btn active" title="Toggle Sound">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+    </button>
+
+    <script src="audio-engine.js"></script>
+    <script src="graph-utils.js"></script>
+    <script src="mst-algorithms.js"></script>
+    <script src="visualizer.js"></script>
+    <script src="app.js"></script>
+    
+    <!-- Splash Screen Script -->
+    <script>
+        // Hide splash screen after page loads
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.classList.add('hidden');
+                    // Remove from DOM after animation completes
+                    setTimeout(function() {
+                        splash.remove();
+                    }, 800);
+                }
+            }, 2000); // Show for 2 seconds
+        });
+    </script>
+</body>
+</html>
