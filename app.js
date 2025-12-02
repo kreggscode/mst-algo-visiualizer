@@ -10,6 +10,8 @@ class App {
         this.isRunning = false;
         this.isPaused = false;
         this.gridSize = 20;
+        this.mazeShape = 'grid';
+        this.edgeColor = '#ffffff';
         this.algorithmColors = {
             'prim': '#00ff88',
             'jarnik': '#00ff88',
@@ -73,12 +75,38 @@ class App {
             }
         });
 
+        // Edge color picker
+        const edgeColorPicker = document.getElementById('edge-color-picker');
+        edgeColorPicker.addEventListener('change', (e) => {
+            if (!this.isRunning) {
+                this.edgeColor = e.target.value;
+                if (this.primVisualizer) this.primVisualizer.edgeColor = this.edgeColor;
+                if (this.kruskalVisualizer) this.kruskalVisualizer.edgeColor = this.edgeColor;
+                if (this.singleVisualizer) {
+                    this.singleVisualizer.edgeColor = this.edgeColor;
+                    this.singleVisualizer.draw();
+                }
+            }
+        });
+
         // Stop button
         document.getElementById('stop').addEventListener('click', () => {
             if (this.isRunning) {
                 this.stopAnimation();
             }
         });
+
+        // Maze shape control
+        const mazeShapeSelect = document.getElementById('maze-shape');
+        if (mazeShapeSelect) {
+            this.mazeShape = mazeShapeSelect.value; // Initialize from HTML
+            mazeShapeSelect.addEventListener('change', (e) => {
+                if (!this.isRunning) {
+                    this.mazeShape = e.target.value;
+                    this.generateNewGraph();
+                }
+            });
+        }
 
         // Grid size control
         const sizeSlider = document.getElementById('grid-size');
@@ -207,18 +235,22 @@ class App {
     }
 
     generateNewGraph() {
-        // Generate new graph
-        this.graph = GraphUtils.generateGridGraph(this.gridSize);
+        // Generate new graph based on selected shape
+        this.graph = GraphUtils.generateGraph(this.mazeShape, this.gridSize);
         
         // Update all visualizers
+        const shape = this.graph.shape || 'grid';
         if (this.primVisualizer) {
-            this.primVisualizer.initialize(this.graph.nodes, this.graph.edges, this.gridSize);
+            this.primVisualizer.initialize(this.graph.nodes, this.graph.edges, this.gridSize, shape);
+            this.primVisualizer.edgeColor = this.edgeColor || '#ffffff';
         }
         if (this.kruskalVisualizer) {
-            this.kruskalVisualizer.initialize(this.graph.nodes, this.graph.edges, this.gridSize);
+            this.kruskalVisualizer.initialize(this.graph.nodes, this.graph.edges, this.gridSize, shape);
+            this.kruskalVisualizer.edgeColor = this.edgeColor || '#ffffff';
         }
         if (this.singleVisualizer) {
-            this.singleVisualizer.initialize(this.graph.nodes, this.graph.edges, this.gridSize);
+            this.singleVisualizer.initialize(this.graph.nodes, this.graph.edges, this.gridSize, shape);
+            this.singleVisualizer.edgeColor = this.edgeColor || '#ffffff';
         }
         
         // Reset stats
@@ -263,7 +295,9 @@ class App {
         document.getElementById('pause').disabled = false;
         document.getElementById('stop').disabled = false;
         document.getElementById('grid-size').disabled = true;
+        document.getElementById('maze-shape').disabled = true;
         document.getElementById('color-picker').disabled = true;
+        document.getElementById('edge-color-picker').disabled = true;
         
         const algorithm = document.getElementById('algorithm').value;
         const nodes = [...this.graph.nodes];
@@ -359,7 +393,9 @@ class App {
         
         // Ensure visualizer has nodes and edges
         if (!visualizer.nodes || visualizer.nodes.length === 0) {
-            visualizer.initialize(nodes, edges, this.gridSize);
+            const shape = this.graph?.shape || 'grid';
+            visualizer.initialize(nodes, edges, this.gridSize, shape);
+            visualizer.edgeColor = this.edgeColor || '#ffffff';
         }
         
         const mstAlgorithms = new MSTAlgorithms(visualizer);
@@ -387,7 +423,9 @@ class App {
         
         // Ensure visualizer has nodes and edges
         if (!visualizer.nodes || visualizer.nodes.length === 0) {
-            visualizer.initialize(nodes, edges, this.gridSize);
+            const shape = this.graph?.shape || 'grid';
+            visualizer.initialize(nodes, edges, this.gridSize, shape);
+            visualizer.edgeColor = this.edgeColor || '#ffffff';
         }
         
         const mstAlgorithms = new MSTAlgorithms(visualizer);
@@ -672,7 +710,9 @@ class App {
         document.getElementById('pause').textContent = 'Pause';
         document.getElementById('stop').disabled = true;
         document.getElementById('grid-size').disabled = false;
+        document.getElementById('maze-shape').disabled = false;
         document.getElementById('color-picker').disabled = false;
+        document.getElementById('edge-color-picker').disabled = false;
     }
 }
 

@@ -16,6 +16,9 @@ class Visualizer {
         this.edgesAdded = 0;
         this.totalWeight = 0;
         this.drawPending = false;
+        this.shape = 'grid';
+        this.edgeColor = '#ffffff';
+        this.boundaryEdges = new Set();
         
         // Setup canvas size
         this.resizeCanvas();
@@ -53,16 +56,26 @@ class Visualizer {
         this.draw();
     }
 
-    initialize(nodes, edges, gridSize) {
+    initialize(nodes, edges, gridSize, shape = 'grid') {
         this.nodes = nodes;
         this.edges = edges;
         this.gridSize = gridSize;
+        this.shape = shape;
         this.mstEdges.clear();
         this.candidateEdges.clear();
         this.nodeStates.clear();
         this.edgeStates.clear();
         this.edgesAdded = 0;
         this.totalWeight = 0;
+        this.boundaryEdges.clear();
+        
+        // Collect boundary edges
+        edges.forEach(edge => {
+            if (edge.isBoundary) {
+                const edgeKey = `${Math.min(edge.from, edge.to)}-${Math.max(edge.from, edge.to)}`;
+                this.boundaryEdges.add(edgeKey);
+            }
+        });
         
         // Recalculate display dimensions if needed
         if (!this.displayWidth) {
@@ -93,6 +106,9 @@ class Visualizer {
             // Draw grid lines (subtle)
             this.drawGrid();
             
+            // Draw shape boundary edges (glowing border)
+            this.drawShapeBoundary();
+            
             // Draw all edges (candidates - faint)
             this.drawAllEdges();
             
@@ -118,6 +134,7 @@ class Visualizer {
             this.ctx.fillStyle = '#000000';
             this.ctx.fillRect(0, 0, width, height);
             this.drawGrid();
+            this.drawShapeBoundary();
             this.drawAllEdges();
             this.drawMSTEdges();
             this.drawNodes();
@@ -147,6 +164,50 @@ class Visualizer {
             this.ctx.lineTo(width, y);
             this.ctx.stroke();
         }
+    }
+
+    drawShapeBoundary() {
+        if (this.shape === 'grid' || this.boundaryEdges.size === 0) return;
+        
+        const cellW = this.cellWidth || ((this.displayWidth || this.canvas.width / (window.devicePixelRatio || 1)) / this.gridSize);
+        const cellH = this.cellHeight || ((this.displayHeight || this.canvas.height / (window.devicePixelRatio || 1)) / this.gridSize);
+        
+        // Draw glowing boundary edges
+        this.boundaryEdges.forEach(edgeKey => {
+            const [fromId, toId] = edgeKey.split('-').map(Number);
+            const fromNode = this.nodes.find(n => n.id === fromId);
+            const toNode = this.nodes.find(n => n.id === toId);
+            
+            if (!fromNode || !toNode) return;
+            
+            const x1 = (fromNode.col + 0.5) * cellW;
+            const y1 = (fromNode.row + 0.5) * cellH;
+            const x2 = (toNode.col + 0.5) * cellW;
+            const y2 = (toNode.row + 0.5) * cellH;
+            
+            // Strong glow effect for boundary
+            this.ctx.shadowBlur = 25;
+            this.ctx.shadowColor = this.edgeColor;
+            this.ctx.strokeStyle = this.edgeColor;
+            this.ctx.globalAlpha = 0.9;
+            this.ctx.lineWidth = 4;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+            
+            // Draw main boundary edge
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+            
+            // Additional bright core
+            this.ctx.shadowBlur = 15;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+        });
+        
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.shadowBlur = 0;
     }
 
     drawAllEdges() {
